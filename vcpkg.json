@@ -1,0 +1,9 @@
+{
+  "name": "bhcpphptoolkit",
+  "version-semver": "0.1.0",
+  "description": "A header-only high-performance C++ toolkit with pooled containers, segmented memory utilities, and lightweight synchronization primitives.",
+  "homepage": "https://github.com/Bighiung/BHCppHPToolKit",
+  "documentation": "https://github.com/Bighiung/BHCppHPToolKit#readme",
+  "license": "MIT",
+  "dependencies": []
+}

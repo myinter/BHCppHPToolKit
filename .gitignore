@@ -1,0 +1,5 @@
+.DS_Store
+.codex-home/
+build/
+CMakeUserPresets.json
+-.o
