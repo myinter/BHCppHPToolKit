@@ -40,6 +40,7 @@ set(BHCPPHP_TOOLKIT_SOURCE_HEADERS
     Memory/BlockMemPool.hpp
     Memory/SegmentedObjectPool.hpp
     MultiPlatforms/PlatformMemory.hpp
+    MultiPlatforms/PlatformThread.hpp
     MultiThreadAndMutex/BHSync.hpp
 )
 

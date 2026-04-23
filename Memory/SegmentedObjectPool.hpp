@@ -229,6 +229,9 @@ private:
 // ----------------------------
 // PooledObject 基类 / Base class for pooled objects
 // ----------------------------
+template <class T>
+class PooledSharedPtr;
+
 template <class Derived>
 struct PooledObject {
     virtual ~PooledObject() = default;
@@ -266,3 +269,209 @@ struct PooledObject {
 private:
     bool recycled_ = false;
 };
+
+// ----------------------------
+// PooledSharedPtr 智能指针 / Smart pointer for pooled shared objects
+// ----------------------------
+template <class T>
+class PooledSharedPtr {
+public:
+    typedef T element_type;
+
+    PooledSharedPtr() noexcept : ptr_(nullptr) {}
+    PooledSharedPtr(std::nullptr_t) noexcept : ptr_(nullptr) {}
+
+    PooledSharedPtr(const PooledSharedPtr& other) noexcept : ptr_(other.ptr_) {
+        add_ref_if_needed();
+    }
+
+    template <class U>
+    PooledSharedPtr(const PooledSharedPtr<U>& other,
+                    typename std::enable_if<std::is_convertible<U*, T*>::value>::type* = nullptr) noexcept
+        : ptr_(other.get()) {
+        add_ref_if_needed();
+    }
+
+    PooledSharedPtr(PooledSharedPtr&& other) noexcept : ptr_(other.ptr_) {
+        other.ptr_ = nullptr;
+    }
+
+    template <class U>
+    PooledSharedPtr(PooledSharedPtr<U>&& other,
+                    typename std::enable_if<std::is_convertible<U*, T*>::value>::type* = nullptr) noexcept
+        : ptr_(other.get()) {
+        other.reset_without_release();
+    }
+
+    ~PooledSharedPtr() {
+        release_ref_if_needed();
+    }
+
+    PooledSharedPtr& operator=(const PooledSharedPtr& other) noexcept {
+        if (this != &other) {
+            PooledSharedPtr temp(other);
+            swap(temp);
+        }
+        return *this;
+    }
+
+    PooledSharedPtr& operator=(PooledSharedPtr&& other) noexcept {
+        if (this != &other) {
+            release_ref_if_needed();
+            ptr_ = other.ptr_;
+            other.ptr_ = nullptr;
+        }
+        return *this;
+    }
+
+    void reset() noexcept {
+        release_ref_if_needed();
+    }
+
+    template <class U>
+    void reset(U* ptr,
+               typename std::enable_if<std::is_convertible<U*, T*>::value>::type* = nullptr) {
+        PooledSharedPtr temp = adopt(ptr);
+        swap(temp);
+    }
+
+    void swap(PooledSharedPtr& other) noexcept {
+        T* temp = ptr_;
+        ptr_ = other.ptr_;
+        other.ptr_ = temp;
+    }
+
+    T* get() const noexcept { return ptr_; }
+    T& operator*() const noexcept { return *ptr_; }
+    T* operator->() const noexcept { return ptr_; }
+    explicit operator bool() const noexcept { return ptr_ != nullptr; }
+    bool operator==(const PooledSharedPtr& other) const noexcept { return ptr_ == other.ptr_; }
+    bool operator!=(const PooledSharedPtr& other) const noexcept { return ptr_ != other.ptr_; }
+
+    std::size_t use_count() const noexcept {
+        return ptr_ ? ptr_->use_count() : 0u;
+    }
+
+    bool unique() const noexcept {
+        return use_count() == 1u;
+    }
+
+    static PooledSharedPtr adopt(T* ptr) noexcept {
+        return PooledSharedPtr(ptr, false);
+    }
+
+private:
+    template <class U>
+    friend class PooledSharedPtr;
+
+    explicit PooledSharedPtr(T* ptr, bool add_ref) noexcept : ptr_(ptr) {
+        if (add_ref) {
+            add_ref_if_needed();
+        }
+    }
+
+    void add_ref_if_needed() noexcept {
+        if (ptr_) {
+            ptr_->add_ref();
+        }
+    }
+
+    void release_ref_if_needed() noexcept {
+        if (ptr_) {
+            ptr_->release_ref();
+            ptr_ = nullptr;
+        }
+    }
+
+    void reset_without_release() noexcept {
+        ptr_ = nullptr;
+    }
+
+    T* ptr_;
+};
+
+template <class T>
+inline void swap(PooledSharedPtr<T>& lhs, PooledSharedPtr<T>& rhs) noexcept {
+    lhs.swap(rhs);
+}
+
+// ----------------------------
+// 引用计数池化对象基类 / Ref-counted base class for pooled objects
+// ----------------------------
+template <class Derived>
+struct RefCountedPooledObject {
+    virtual ~RefCountedPooledObject() {}
+    virtual void reset() {}
+
+    template <class... Args>
+    static PooledSharedPtr<Derived> make_shared(Args&&... args) {
+        Derived* obj = SegmentedObjectPool<Derived>::instance().allocate(std::forward<Args>(args)...);
+        obj->init_shared_owner_count_();
+        return PooledSharedPtr<Derived>::adopt(obj);
+    }
+
+    template <class... Args>
+    static PooledSharedPtr<Derived> atomic_make_shared(Args&&... args) {
+        Derived* obj = SegmentedObjectPool<Derived>::instance().atomic_allocate(std::forward<Args>(args)...);
+        obj->init_shared_owner_count_();
+        return PooledSharedPtr<Derived>::adopt(obj);
+    }
+
+    PooledSharedPtr<Derived> shared_from_this() {
+        add_ref();
+        return PooledSharedPtr<Derived>::adopt(static_cast<Derived*>(this));
+    }
+
+    void add_ref() noexcept {
+        ref_count_.fetch_add(1u, std::memory_order_relaxed);
+    }
+
+    void release_ref() noexcept {
+        const unsigned int previous = ref_count_.fetch_sub(1u, std::memory_order_acq_rel);
+        assert(previous > 0u);
+        if (previous == 1u) {
+            this->reset();
+            recycled_ = true;
+            SegmentedObjectPool<Derived>::instance().atomic_deallocate(static_cast<Derived*>(this));
+        }
+    }
+
+    std::size_t use_count() const noexcept {
+        return static_cast<std::size_t>(ref_count_.load(std::memory_order_acquire));
+    }
+
+    bool unique() const noexcept {
+        return use_count() == 1u;
+    }
+
+    bool is_recycled() const noexcept { return recycled_; }
+
+    void mark_in_use() noexcept {
+        recycled_ = false;
+        ref_count_.store(0u, std::memory_order_release);
+    }
+
+private:
+    friend class PooledSharedPtr<Derived>;
+
+    void init_shared_owner_count_() noexcept {
+        ref_count_.store(1u, std::memory_order_release);
+    }
+
+    std::atomic<unsigned int> ref_count_{0u};
+    bool recycled_ = false;
+};
+
+template <class T, class... Args>
+inline PooledSharedPtr<T> make_pooled_shared(Args&&... args) {
+    static_assert(std::is_base_of<RefCountedPooledObject<T>, T>::value,
+                  "T must derive from RefCountedPooledObject<T>");
+    return T::make_shared(std::forward<Args>(args)...);
+}
+
+template <class T, class... Args>
+inline PooledSharedPtr<T> atomic_make_pooled_shared(Args&&... args) {
+    static_assert(std::is_base_of<RefCountedPooledObject<T>, T>::value,
+                  "T must derive from RefCountedPooledObject<T>");
+    return T::atomic_make_shared(std::forward<Args>(args)...);
+}

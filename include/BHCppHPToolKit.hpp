@@ -11,4 +11,5 @@
 #include "Memory/BlockMemPool.hpp"
 #include "Memory/SegmentedObjectPool.hpp"
 #include "MultiPlatforms/PlatformMemory.hpp"
+#include "MultiPlatforms/PlatformThread.hpp"
 #include "MultiThreadAndMutex/BHSync.hpp"

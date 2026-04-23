@@ -4,23 +4,23 @@
  * RWRingQueue.hpp
  *
  * 文件介绍 / Description:
- * 基于 RWSmartLock 实现的固定容量环形队列，适用于缓冲消息、日志事件、
+ * 基于 RWSmartLock 和 BlockMemPool 实现的动态扩容环形队列，适用于缓冲消息、日志事件、
  * 网络包等高频入队/出队场景。
  *
- * A fixed-capacity ring queue based on RWSmartLock. It is suitable for
- * buffering messages, log events, network packets, and other high-frequency
- * producer/consumer workloads.
+ * A dynamically growable ring queue based on RWSmartLock and BlockMemPool.
+ * It is suitable for buffering messages, log events, network packets, and
+ * other high-frequency producer/consumer workloads.
  */
 
 #pragma once
 
+#include "PooledVector.hpp"
 #include "../Memory/BlockMemPool.hpp"
 #include "../MultiThreadAndMutex/BHSync.hpp"
 #include <cstddef>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 template<typename T>
 class RWRingQueue {
@@ -130,7 +130,9 @@ private:
     }
 
 public:
-    explicit RWRingQueue(std::size_t capacity,
+    static const std::size_t kDefaultCapacity = 128;
+
+    explicit RWRingQueue(std::size_t capacity = kDefaultCapacity,
                          bool overwriteWhenFull = false,
                          bool autoExpand = true,
                          bool needSleep = true,
@@ -271,7 +273,7 @@ public:
         return true;
     }
 
-    std::size_t pop_batch(std::vector<T>& out, std::size_t maxCount) {
+    std::size_t pop_batch(PooledVector<T>& out, std::size_t maxCount) {
         _lock.writeLock();
 
         const std::size_t actualCount = (_size < maxCount) ? _size : maxCount;
@@ -289,10 +291,10 @@ public:
         return actualCount;
     }
 
-    std::vector<T> snapshot() const {
+    PooledVector<T> snapshot() const {
         _lock.readLock();
 
-        std::vector<T> result;
+        PooledVector<T> result;
         result.reserve(_size);
 
         std::size_t index = _head;

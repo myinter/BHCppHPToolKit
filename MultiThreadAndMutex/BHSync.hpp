@@ -33,6 +33,7 @@
 
 
 #pragma once
+#include "../MultiPlatforms/PlatformThread.hpp"
 #include <atomic>
 #include <thread>
 #include <vector>
@@ -43,14 +44,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <random>
-
-#ifdef _WIN32
-#include <windows.h>  // Windows API
-#elif defined(__linux__) || defined(__APPLE__)
-// POSIX 线程 / POSIX threads
-#include <pthread.h>
-#include <sched.h>
-#endif
 
 
 template <typename T>
@@ -330,74 +323,20 @@ public:
 
 // ================= ThreadPriority 线程优先级枚举 =================
 // 线程优先级 / Thread priorities
-enum class ThreadPriority {
-    UI,
-    High,
-    Normal,
-    Background
-};
+typedef multi_platforms::ThreadPriority ThreadPriority;
 
-// 用于不同平台，设置进程优先级的包装方法
-// A middle-layer method for setting process priorities on different platforms
 inline void setThreadPriority(std::thread &t, ThreadPriority p) {
-#ifdef _WIN32
-    int pri = THREAD_PRIORITY_NORMAL;  // 默认优先级 / Default priority
-    switch (p) {
-        case ThreadPriority::UI: pri = THREAD_PRIORITY_TIME_CRITICAL; break;  // UI 优先级 / UI priority
-        case ThreadPriority::High: pri = THREAD_PRIORITY_HIGHEST; break;  // 高优先级 / High priority
-        case ThreadPriority::Normal: pri = THREAD_PRIORITY_NORMAL; break;  // 普通优先级 / Normal priority
-        case ThreadPriority::Background: pri = THREAD_PRIORITY_LOWEST; break;  // 后台优先级 / Background priority
-    }
-    SetThreadPriority(t.native_handle(), pri);  // 设置Windows线程优先级 / Set Windows thread priority
-#elif defined(__linux__) || defined(__APPLE__)
-    sched_param sch; int policy; pthread_getschedparam(pthread_self(), &policy, &sch);  // 获取线程调度参数 / Get thread scheduling params
-    switch (p) {
-        case ThreadPriority::UI: sch.sched_priority = sched_get_priority_max(SCHED_FIFO); break;  // UI 优先级 / UI priority
-        case ThreadPriority::High: sch.sched_priority = (sched_get_priority_max(SCHED_FIFO)*3)/4; break;  // 高优先级 / High priority
-        case ThreadPriority::Normal: sch.sched_priority = 0; break;  // 普通优先级 / Normal priority
-        case ThreadPriority::Background: sch.sched_priority = sched_get_priority_min(SCHED_FIFO); break;  // 后台优先级 / Background priority
-    }
-    pthread_setschedparam(t.native_handle(), SCHED_FIFO, &sch);  // 设置POSIX线程优先级 / Set POSIX thread priority
-#else
-    (void)t; (void)p;  // 占位 / Placeholder
-#endif
+    multi_platforms::setThreadPriority(t, p);
 }
 
 // ================= BHGCDController 线程池 with non-blocking Barrier =================
 
 namespace BHGCD {
 
-// 线程优先级枚举 / Thread priority enum
-enum class ThreadPriority {
-    UI,
-    High,
-    Normal,
-    Background
-};
+typedef multi_platforms::ThreadPriority ThreadPriority;
 
-// 设置线程优先级 / Set thread priority
 inline void setThreadPriority(std::thread &t, ThreadPriority p) {
-#ifdef _WIN32
-    int pri = THREAD_PRIORITY_NORMAL;
-    switch (p) {
-        case ThreadPriority::UI: pri = THREAD_PRIORITY_TIME_CRITICAL; break;
-        case ThreadPriority::High: pri = THREAD_PRIORITY_HIGHEST; break;
-        case ThreadPriority::Normal: pri = THREAD_PRIORITY_NORMAL; break;
-        case ThreadPriority::Background: pri = THREAD_PRIORITY_LOWEST; break;
-    }
-    SetThreadPriority(t.native_handle(), pri);
-#elif defined(__linux__) || defined(__APPLE__)
-    sched_param sch; int policy; pthread_getschedparam(pthread_self(), &policy, &sch);
-    switch (p) {
-        case ThreadPriority::UI: sch.sched_priority = sched_get_priority_max(SCHED_FIFO); break;
-        case ThreadPriority::High: sch.sched_priority = (sched_get_priority_max(SCHED_FIFO)*3)/4; break;
-        case ThreadPriority::Normal: sch.sched_priority = 0; break;
-        case ThreadPriority::Background: sch.sched_priority = sched_get_priority_min(SCHED_FIFO); break;
-    }
-    pthread_setschedparam(t.native_handle(), SCHED_FIFO, &sch);
-#else
-    (void)t; (void)p;
-#endif
+    multi_platforms::setThreadPriority(t, p);
 }
 
 class BHGCDController {
@@ -550,7 +489,7 @@ private:
     void startThreads(size_t count) {
         for (size_t i = 0; i < count; ++i) {
             threads.emplace_back([this]() { workLoop(); });
-            setThreadPriority(threads.back(), poolPriority);
+            BHGCD::setThreadPriority(threads.back(), poolPriority);
         }
     }
 
