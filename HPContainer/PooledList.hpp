@@ -117,7 +117,6 @@ public:
             _tail = other._tail;
         } else {
 
-            size_t idx = 0;
             LinkedListNode* cur = nodeAt(pos);
 
             LinkedListNode* prev = cur->prev;
@@ -396,7 +395,6 @@ public:
             _indexCache.clear();
         } else {
 
-            size_t idx = 0;
             LinkedListNode* cur = nodeAt(pos);
 
             LinkedListNode* prev = cur->prev;

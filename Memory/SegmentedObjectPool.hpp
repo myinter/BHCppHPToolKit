@@ -17,7 +17,7 @@
  */
 
 #pragma once
-#include "../Foudations/MathBits.hpp"
+#include "../Foundations/MathBits.hpp"
 #include "../MultiPlatforms/PlatformMemory.hpp"
 #include <cstddef>
 #include <cstdint>

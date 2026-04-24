@@ -28,7 +28,7 @@ set(BHCPPHP_TOOLKIT_PUBLIC_HEADERS
 )
 
 set(BHCPPHP_TOOLKIT_SOURCE_HEADERS
-    Foudations/MathBits.hpp
+    Foundations/MathBits.hpp
     HPContainer/PooledHashList.hpp
     HPContainer/PooledLinkedHashList.hpp
     HPContainer/PooledHashMap.hpp
@@ -60,7 +60,7 @@ install(
 )
 
 install(
-    DIRECTORY Foudations HPContainer Memory MultiPlatforms MultiThreadAndMutex
+    DIRECTORY Foundations HPContainer Memory MultiPlatforms MultiThreadAndMutex
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.hpp"
 )

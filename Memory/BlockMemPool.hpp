@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "../Foudations/MathBits.hpp"
+#include "../Foundations/MathBits.hpp"
 #include "../MultiPlatforms/PlatformMemory.hpp"
 #include "../MultiThreadAndMutex/BHSync.hpp"
 #include <atomic>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Foudations/MathBits.hpp"
+#include "Foundations/MathBits.hpp"
 #include "HPContainer/PooledLinkedHashList.hpp"
 #include "HPContainer/PooledHashMap.hpp"
 #include "HPContainer/PooledList.hpp"
