@@ -1,0 +1,93 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug find_package example (macOS)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/vscode-debug/bhcpphptoolkit_vscode_example",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build VSCode Debug Example",
+            "MIMode": "lldb",
+            "miDebuggerPath": "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb",
+            "externalConsole": false,
+            "stopAtEntry": false,
+            "setupCommands": [
+                {
+                    "description": "Enable pretty printing",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Run find_package example (macOS)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/vscode-debug/bhcpphptoolkit_vscode_example",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build VSCode Debug Example",
+            "MIMode": "lldb",
+            "miDebuggerPath": "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb",
+            "externalConsole": false,
+            "noDebug": true
+        },
+        {
+            "name": "Debug find_package example (Linux)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/vscode-debug/bhcpphptoolkit_vscode_example",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build VSCode Debug Example",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "externalConsole": false,
+            "stopAtEntry": false,
+            "setupCommands": [
+                {
+                    "description": "Enable pretty printing",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Run find_package example (Linux)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/vscode-debug/bhcpphptoolkit_vscode_example",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build VSCode Debug Example",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "externalConsole": false,
+            "noDebug": true
+        },
+        {
+            "name": "Debug find_package example (Windows)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/vscode-debug/bhcpphptoolkit_vscode_example.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build VSCode Debug Example",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Run find_package example (Windows)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/vscode-debug/bhcpphptoolkit_vscode_example.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build VSCode Debug Example",
+            "console": "integratedTerminal",
+            "noDebug": true
+        }
+    ]
+}

@@ -1,0 +1,75 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Configure VSCode Debug Example",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-S",
+                "${workspaceFolder}/.vscode/dev",
+                "-B",
+                "${workspaceFolder}/build/vscode-debug",
+                "-DCMAKE_BUILD_TYPE=Debug"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Build VSCode Debug Example",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "${workspaceFolder}/build/vscode-debug"
+            ],
+            "dependsOn": [
+                "Configure VSCode Debug Example"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "windows": {
+                "problemMatcher": [
+                    "$msCompile"
+                ]
+            }
+        },
+        {
+            "label": "Run VSCode Debug Example",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/vscode-debug/bhcpphptoolkit_vscode_example",
+            "dependsOn": [
+                "Build VSCode Debug Example"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": true
+            },
+            "problemMatcher": [],
+            "windows": {
+                "command": "${workspaceFolder}\\build\\vscode-debug\\bhcpphptoolkit_vscode_example.exe"
+            }
+        },
+        {
+            "label": "Build And Run VSCode Debug Example",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Run VSCode Debug Example"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}
