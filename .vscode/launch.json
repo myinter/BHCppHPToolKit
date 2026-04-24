@@ -10,7 +10,6 @@
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build VSCode Debug Example",
             "MIMode": "lldb",
-            "miDebuggerPath": "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb",
             "externalConsole": false,
             "stopAtEntry": false,
             "setupCommands": [
@@ -30,7 +29,6 @@
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build VSCode Debug Example",
             "MIMode": "lldb",
-            "miDebuggerPath": "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb",
             "externalConsole": false,
             "noDebug": true
         },
